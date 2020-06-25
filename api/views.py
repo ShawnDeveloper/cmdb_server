@@ -3,11 +3,10 @@ import importlib
 import datetime
 
 from django.shortcuts import HttpResponse
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
-from django.views import View
-from django.utils.decorators import method_decorator
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from .models import *
 from api import settings
@@ -20,8 +19,7 @@ def get_class(path):
     return cls
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class ServerView(View):
+class ServerView(APIView):
     def get(self, request, *args, **kwargs):
         '''
             获取今日未采集的服务器列表
@@ -51,7 +49,7 @@ class ServerView(View):
             Q(last_update_date__lt=today) | Q(last_update_date__isnull=True)).values_list('hostname')
         server_list = [item[0] for item in server_query_set]
 
-        return JsonResponse({'status': True, 'data': list(server_list)})
+        return Response({'status': True, 'data': list(server_list)})
 
     def post(self, request, *args, **kwargs):
         '''
@@ -83,4 +81,4 @@ class ServerView(View):
         server.last_update_date = datetime.date.today()
         server.save()
 
-        return HttpResponse("OK")
+        return Response("OK")
