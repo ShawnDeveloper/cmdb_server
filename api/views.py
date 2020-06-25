@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.views import View
+from django.utils.decorators import method_decorator
 
 from .models import *
 from api import settings
@@ -19,6 +20,7 @@ def get_class(path):
     return cls
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ServerView(View):
     def get(self, request, *args, **kwargs):
         '''
@@ -51,7 +53,6 @@ class ServerView(View):
 
         return JsonResponse({'status': True, 'data': list(server_list)})
 
-    @csrf_exempt
     def post(self, request, *args, **kwargs):
         '''
         接受中控机采集到的数据
