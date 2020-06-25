@@ -7,6 +7,7 @@ from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import serializers
 
 from .models import *
 from api import settings
@@ -17,6 +18,11 @@ def get_class(path):
     module = importlib.import_module(module_path)
     cls = getattr(module, class_name)
     return cls
+
+class ServerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Server
+        fields = "__all__"
 
 
 class ServerView(APIView):
@@ -46,10 +52,13 @@ class ServerView(APIView):
         server_query_set = Server.objects.filter(con).all()
         '''
         server_query_set = Server.objects.filter(
-            Q(last_update_date__lt=today) | Q(last_update_date__isnull=True)).values_list('hostname')
-        server_list = [item[0] for item in server_query_set]
+            Q(last_update_date__lt=today) | Q(last_update_date__isnull=True)).all()
 
-        return Response({'status': True, 'data': list(server_list)})
+        # server_list = [item[0] for item in server_query_set]
+        server_list = ServerSerializer(instance=server_query_set,many=True).data
+
+        # return Response({'status': True, 'data': list(server_list)})
+        return Response({'status': True, 'data': server_list})
 
     def post(self, request, *args, **kwargs):
         '''
