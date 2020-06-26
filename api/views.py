@@ -66,7 +66,7 @@ class ServerView(APIView):
 
     def post(self, request, *args, **kwargs):
         '''
-        接受中控机采集到的数据
+        接收中控机采集到的数据
         '''
         server_info_dict = request.data
         hostname = server_info_dict['host']
@@ -75,16 +75,18 @@ class ServerView(APIView):
         if not server:
             print('服务器不存在')
             return HttpResponse('服务器不存在')
-
+        msg_list = []
         for service_dict in settings.SERVICE_LIST:
             name = service_dict['name']
             verbose_name = service_dict['verbose_name']
             service_class = get_class(service_dict['service_class'])
             model_class = get_class(service_dict['model_class'])
             key = service_dict['key']
+            data_dict = info_dict[name]['data']
+            [v.update({key: k}) for k, v in data_dict.items()]
             auto_update = service_dict.get('auto_update', True)
             # 转换格式用于 serializer 数据校验
-            info_list = copy.deepcopy(list(info_dict[name]['data'].values()))
+            info_list = copy.deepcopy(list(data_dict.values()))
             [item.update({'server': server.id}) for item in info_list]
             ser = get_serializer(model_class)(data=info_list, many=True)
             if ser.is_valid():
@@ -94,10 +96,11 @@ class ServerView(APIView):
                     service_obj.auto_update()
                 else:
                     service_obj.update()
+                msg_list.append({'name': name, 'status': 1, 'msg': ''})
+            else:
+                msg_list.append({'name': name, 'status': 0, 'msg': ser.error_messages})
 
-                server.last_update_date = datetime.date.today()
-                server.save()
-                return Response("OK")
+        server.last_update_date = datetime.date.today()
+        server.save()
 
-            print(ser.errors)
-            return Response('...')
+        return Response(msg_list)

@@ -43,10 +43,10 @@ class BaseService(object):
         msg_list = []
         for db_remove_key, new_create_key in self.reuse_dict.items():
             msg_list.append(
-                '【删除{}】\n信息：{}'.format(self.verbose_name, self.get_record_msg(self.db_data_dict[db_remove_key])))
+                '【删除{}】\n信息：\n{}'.format(self.verbose_name, self.get_record_msg(self.db_data_dict[db_remove_key])))
             self.update_obj(self.new_data_dict[new_create_key], self.db_data_dict[db_remove_key])
             msg_list.append(
-                '【新增{}】\n信息：{}'.format(self.verbose_name, self.get_record_msg(self.db_data_dict[db_remove_key])))
+                '【新增{}】\n信息：\n{}'.format(self.verbose_name, self.get_record_msg(self.db_data_dict[db_remove_key])))
 
         # 更新
         for key in self.update_set:
@@ -60,12 +60,12 @@ class BaseService(object):
         # 新增
         for key in self.create_set:
             obj = self.model_class.objects.create(server=self.server, **self.new_data_dict[key])
-            msg_list.append('【新增{}】\n信息：{}'.format(self.verbose_name, self.get_record_msg(obj)))
+            msg_list.append('【新增{}】\n信息：\n{}'.format(self.verbose_name, self.get_record_msg(obj)))
 
         # 删除
         for key in self.remove_set:
             self.db_data_dict[key].delete()
-            msg_list.append('【删除{}】\n信息：{}'.format(self.verbose_name, self.get_record_msg(self.db_data_dict[key])))
+            msg_list.append('【删除{}】\n信息：\n{}'.format(self.verbose_name, self.get_record_msg(self.db_data_dict[key])))
 
         if msg_list:
             AssetsRecord.objects.create(server=self.server, content='\n---\n'.join(msg_list))
