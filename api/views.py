@@ -1,6 +1,6 @@
-import json
 import importlib
 import datetime
+import copy
 
 from django.shortcuts import HttpResponse
 from django.db.models import Q
@@ -19,10 +19,14 @@ def get_class(path):
     cls = getattr(module, class_name)
     return cls
 
-class ServerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Server
-        fields = "__all__"
+
+def get_serializer(model_class):
+    class ServerSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = model_class
+            fields = "__all__"
+
+    return ServerSerializer
 
 
 class ServerView(APIView):
@@ -55,7 +59,7 @@ class ServerView(APIView):
             Q(last_update_date__lt=today) | Q(last_update_date__isnull=True)).all()
 
         # server_list = [item[0] for item in server_query_set]
-        server_list = ServerSerializer(instance=server_query_set,many=True).data
+        server_list = get_serializer(Server)(instance=server_query_set, many=True).data
 
         # return Response({'status': True, 'data': list(server_list)})
         return Response({'status': True, 'data': server_list})
@@ -64,8 +68,7 @@ class ServerView(APIView):
         '''
         接受中控机采集到的数据
         '''
-        json_str = request.body.decode('utf8')
-        server_info_dict = json.loads(json_str)
+        server_info_dict = request.data
         hostname = server_info_dict['host']
         info_dict = server_info_dict['info']
         server = Server.objects.filter(hostname=hostname).first()
@@ -80,14 +83,21 @@ class ServerView(APIView):
             model_class = get_class(service_dict['model_class'])
             key = service_dict['key']
             auto_update = service_dict.get('auto_update', True)
-            service_obj = service_class(server, info_dict[name], verbose_name, model_class, key)
+            # 转换格式用于 serializer 数据校验
+            info_list = copy.deepcopy(list(info_dict[name]['data'].values()))
+            [item.update({'server': server.id}) for item in info_list]
+            ser = get_serializer(model_class)(data=info_list, many=True)
+            if ser.is_valid():
+                service_obj = service_class(server, info_dict[name], verbose_name, model_class, key)
 
-            if auto_update:
-                service_obj.auto_update()
-            else:
-                service_obj.update()
+                if auto_update:
+                    service_obj.auto_update()
+                else:
+                    service_obj.update()
 
-        server.last_update_date = datetime.date.today()
-        server.save()
+                server.last_update_date = datetime.date.today()
+                server.save()
+                return Response("OK")
 
-        return Response("OK")
+            print(ser.errors)
+            return Response('...')
