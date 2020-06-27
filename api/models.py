@@ -1,10 +1,23 @@
 from django.db import models
 
 
+class IDC(models.Model):
+    '''
+    机房信息
+    '''
+    name = models.CharField('机房', max_length=32)
+    floor = models.IntegerField('楼层', default=1)
+
+
 class Server(models.Model):
     '''
     服务器表
     '''
+    # IDC 相关
+    idc = models.ForeignKey(verbose_name='机房', to='IDC', null=True, on_delete=models.SET_NULL)
+    cabinet_num = models.CharField(verbose_name='机柜号', max_length=32, null=True, blank=True)
+    cabinet_order = models.CharField(verbose_name='机柜中序号', max_length=32, null=True, blank=True)
+
     hostname = models.CharField(verbose_name='主机名', max_length=32)
     last_update_date = models.DateField(verbose_name='最近汇报时间', null=True, blank=True)
     uname = models.CharField(verbose_name='系统类型', max_length=32, null=True, blank=True)
