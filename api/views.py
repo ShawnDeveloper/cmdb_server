@@ -38,25 +38,25 @@ class ServerView(APIView):
         # 今天
         today = datetime.date.today()
         # 最近汇报时间在今天之前 或 None
-        '''
         # 复杂条件的构建示例
-        con = Q()
-
+        '''
         q1 = Q()
         q1.connector = 'OR'
         q1.children.append(('last_update_date__lt', today))
+        q1.children.append(('last_update_date__isnull', True))
 
         q2 = Q()
-        q2.connector = 'OR'
-        q2.children.append(('last_update_date__isnull', True))
+        q2.children.append(('status__exact', 1))
 
+        con = Q()
+        con.connector = 'AND'
         con.add(q1, 'AND')
-        con.add(q1, 'AND')
+        con.add(q2, 'AND')
 
         server_query_set = Server.objects.filter(con).all()
         '''
         server_query_set = Server.objects.filter(
-            Q(last_update_date__lt=today) | Q(last_update_date__isnull=True)).all()
+            Q(last_update_date__lt=today) | Q(last_update_date__isnull=True)).filter(status=1).all()
 
         # server_list = [item[0] for item in server_query_set]
         server_list = get_serializer(Server)(instance=server_query_set, many=True).data

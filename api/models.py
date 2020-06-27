@@ -3,22 +3,30 @@ from django.db import models
 
 class IDC(models.Model):
     '''
-    机房信息
+    IDC 机房信息
     '''
     name = models.CharField('机房', max_length=32)
     floor = models.IntegerField('楼层', default=1)
+
+    def __str__(self):
+        return '{} - {} 楼'.format(self.name, self.floor)
 
 
 class Server(models.Model):
     '''
     服务器表
     '''
+    status_choice = (
+        (1, '上线'),
+        (2, '下线'),
+    )
+    status = models.SmallIntegerField(verbose_name='状态', choices=status_choice, default=2)
     # IDC 相关
     idc = models.ForeignKey(verbose_name='机房', to='IDC', null=True, on_delete=models.SET_NULL)
     cabinet_num = models.CharField(verbose_name='机柜号', max_length=32, null=True, blank=True)
     cabinet_order = models.CharField(verbose_name='机柜中序号', max_length=32, null=True, blank=True)
 
-    hostname = models.CharField(verbose_name='主机名', max_length=32)
+    hostname = models.CharField(verbose_name='主机名', unique=True, max_length=32)
     last_update_date = models.DateField(verbose_name='最近汇报时间', null=True, blank=True)
     uname = models.CharField(verbose_name='系统类型', max_length=32, null=True, blank=True)
     version = models.CharField(verbose_name='发行版', max_length=128, null=True, blank=True)
