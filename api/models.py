@@ -7,6 +7,10 @@ class Server(models.Model):
     '''
     hostname = models.CharField(verbose_name='主机名', max_length=32)
     last_update_date = models.DateField(verbose_name='最近汇报时间', null=True, blank=True)
+    uname = models.CharField(verbose_name='系统类型', max_length=32, null=True, blank=True)
+    version = models.CharField(verbose_name='发行版', max_length=128, null=True, blank=True)
+    cpu_count = models.IntegerField(verbose_name='CPU个数', null=True, blank=True)
+    kernel_version = models.CharField(verbose_name='内核版本', max_length=128, null=True, blank=True)
 
 
 class FileSystem(models.Model):
@@ -52,6 +56,7 @@ class Memory(models.Model):
     server = models.ForeignKey(to="Server", on_delete=models.CASCADE)
 
 
+"""
 class Basic(models.Model):
     '''
     服务器基础信息表
@@ -64,6 +69,7 @@ class Basic(models.Model):
     kernel_version = models.CharField(verbose_name='内核版本', max_length=128)
     update_time = models.DateTimeField('更新时间', auto_now=True)
     server = models.ForeignKey(to="Server", on_delete=models.CASCADE)
+"""
 
 
 class AssetsRecord(models.Model):

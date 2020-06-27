@@ -21,11 +21,4 @@ SERVICE_LIST = [
         'key': 'type',
         'model_class': 'api.models.Memory',
     },
-    {
-        'name': 'basic',
-        'verbose_name': '基础信息',
-        'service_class': 'api.service.basic.BasicService',
-        'key': 'type',
-        'model_class': 'api.models.Basic',
-    },
 ]

@@ -71,10 +71,20 @@ class ServerView(APIView):
         server_info_dict = request.data
         hostname = server_info_dict['host']
         info_dict = server_info_dict['info']
+
         server = Server.objects.filter(hostname=hostname).first()
         if not server:
             print('服务器不存在')
             return HttpResponse('服务器不存在')
+        # 基础信息修改
+        basic_server_info = info_dict['basic']
+        if basic_server_info['status']:
+            basic_server_data = basic_server_info['data']
+            server.uname = basic_server_data['uname']
+            server.version = basic_server_data['version']
+            server.cpu_count = basic_server_data['cpu_count']
+            server.kernel_version = basic_server_data['kernel_version']
+        # 批量修改其它资产信息
         msg_list = []
         for service_dict in settings.SERVICE_LIST:
             name = service_dict['name']
